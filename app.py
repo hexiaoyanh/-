@@ -54,14 +54,23 @@ def sub():
     res = "\n".join(new_data)
     res = str(base64.b64encode(res.encode("utf-8")), "utf-8")
     url = random_char(8)
-    g.data.append({
-        'url':url,
-        'value':res
-    })
+    g.data[url] = res
     return {"code": 200, "url": url}
 
+@app.get('/sub/<string:url>')
+def getSub(url):
+    if g.data.get(url) is None:
+        return jsonify({
+            "code": -1,
+            "msg" : "url not existed"
+        })
+    return g.data[url]
+
+
+
+
 @app.errorhandler(405)
-def error_405():
+def error_405(e):
     return jsonify({
         "code":405,
         "msg" : "method not allowed"
