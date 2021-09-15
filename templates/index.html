@@ -12,27 +12,58 @@
     <script
             src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
             integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
-            crossorigin="anonymous"
-    ></script>
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"
+            integrity="sha256-Eb6SfNpZyLYBnrvqg4KFxb6vIRg+pLg9vU5Pv5QTzko="
+            crossorigin="anonymous"></script>
 </head>
 <body>
 <h1>中转转换</h1>
 <div class="main" id="group">
 
 </div>
-<div class="mdui-btn-group">
+<div id="copy">
+
+</div>
+<div class="mdui-btn-group" style="    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;">
     <button class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" onclick="submit()">转换订阅</button>
-    <button style="display: inline-block;margin-left: 10px" class="mdui-btn mdui-btn-raised" onclick="addElement()">添加
+    <button style="display: inline-block;margin-left: 10px;margin-right: 10px" class="mdui-btn mdui-btn-raised"
+            onclick="addElement()">添加
     </button>
+    <iframe src="https://ghbtns.com/github-btn.html?user=hexiaoyanh&repo=TransitSubscription&type=watch&count=true&size=large"
+            frameborder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
 </div>
 </body>
+
 <script>
     let tag = 0;
 
     const addElement = () => {
         mdui.$('#group').append(`\n        <div class="main-div" id="tag_${tag}">\n        <div class="mdui-textfield" style="width: 600px">\n            <label class="mdui-textfield-label">订阅地址</label>\n            <label>\n                <input id="input1_${tag}" class="mdui-textfield-input" type="text"/>\n            </label>\n        </div>\n        <div class="mdui-textfield" style="width: 200px;margin-left: 15px">\n            <label class="mdui-textfield-label">中转地址:端口</label>\n            <label>\n                <input id="input2_${tag}" class="mdui-textfield-input" type="text"/>\n            </label>\n        </div>\n        <div class="mdui-chip" onclick="deleteElement('tag_${tag++}')">\n            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">delete</i></span>\n            <span class="mdui-chip-title">删除</span>\n        </div>\n    </div>\n        `)
     }
-    addElement()
+    const init = () => {
+        let val = JSON.parse(localStorage.getItem('data'))
+        if (val !== null) tag = val.length === 0 ? 1 : val.length;
+        else tag = 1
+        for (let i = 0; i < tag; i++) {
+            mdui.$('#group').append(`\n        <div class="main-div" id="tag_${i}">\n        <div class="mdui-textfield" style="width: 600px">\n            <label class="mdui-textfield-label">订阅地址</label>\n            <label>\n                <input id="input1_${i}" class="mdui-textfield-input" type="text"/>\n            </label>\n        </div>\n        <div class="mdui-textfield" style="width: 200px;margin-left: 15px">\n            <label class="mdui-textfield-label">中转地址:端口</label>\n            <label>\n                <input id="input2_${i}" class="mdui-textfield-input" type="text"/>\n            </label>\n        </div>\n        <div class="mdui-chip" onclick="deleteElement('tag_${i}')">\n            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">delete</i></span>\n            <span class="mdui-chip-title">删除</span>\n        </div>\n    </div>\n        `)
+        }
+        tag++
+        let fg = 0
+        if (val !== null) {
+            val.forEach((x) => {
+                mdui.$(`#input1_${fg}`)[0].value = x.key
+                mdui.$(`#input2_${fg++}`)[0].value = x.value
+            })
+        }
+
+    }
+    init()
     const deleteElement = (item) => {
         mdui.$(`#${item}`).remove()
     }
@@ -47,18 +78,35 @@
                 value: mdui.$(`#input2_${i}`)[0].value
             })
         }
+        localStorage.setItem('tag', data.length)
+        localStorage.setItem('data', JSON.stringify(data))
         mdui.$.ajax({
             method: 'POST',
             url: './getSub',
             data: JSON.stringify(data),
             dataType: 'json',
-            contentType:'application/json',
+            contentType: 'application/json',
             success: function (data) {
-                console.log(data);
+                if (data.code === 200) {
+                    mdui.snackbar({
+                        message: "转换成功"
+                    })
+                    mdui.$('#copy').empty();
+                    mdui.$('#copy').append(`    <div class="mdui-chip" style="margin-bottom: 40px">\n        <span class="mdui-chip-title" >${window.location.href + 'sub/' + data.url}</span>\n        <span id="copy" data-clipboard-text='${window.location.href + 'sub/' + data.url}' class="mdui-chip-delete"><i class="mdui-icon material-icons">content_copy</i></span>\n    </div>`)
+                } else {
+                    mdui.snackbar({
+                        message: "转换失败，请检查地址和转换地址是否有误。"
+                    })
+                }
             }
         });
     }
-
+    let clipboard = new ClipboardJS('#copy')
+    clipboard.on('success', (e) => {
+        mdui.snackbar({
+            message: "复制成功"
+        })
+    })
 </script>
 <style>
     .main {
