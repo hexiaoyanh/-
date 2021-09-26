@@ -2,6 +2,7 @@ import base64
 import json
 
 import requests as requests
+import yaml
 from flask import Flask, render_template, request, jsonify, g
 import random, string
 
@@ -63,6 +64,68 @@ def get_data(data):
     return {"code": 200, "url": url, "res": res}
 
 
+def get_yaml(data):
+    with open("./standard.yml", 'r', encoding="utf-8") as f:
+        yml = yaml.load(f.read(), Loader=yaml.FullLoader)
+    for i in data:
+        try:
+            req = requests.get(i['key']).text
+            req = str(base64.b64decode(req), "utf-8").split('\n')
+            req = list(filter(lambda x: x != '', req))
+            for j in req:
+                if j.startswith("vless"):
+                    pass
+                elif j.startswith("trojan"):
+                    trojan = {}
+                    trojan['type'] = "trojan"
+                    trojan['skip-cert-verify'] = True
+                    trojan['password'] = j.split('://')[1].split('@')[0]
+                    trojan['server'] = i['value'].split(':')[0]
+                    trojan['sni'] = j.split('@')[1].split('?')[0].split(':')[0]
+                    trojan['port'] = int(i['value'].split(':')[1])
+                    trojan['name'] = j.split('#')[1]
+                    yml['proxies'].append(trojan)
+                    yml['proxy-groups'][0]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][1]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][2]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][3]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][4]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][5]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][6]['proxies'].append(trojan['name'])
+                    yml['proxy-groups'][9]['proxies'].append(trojan['name'])
+                elif j.startswith("vmess"):
+                    item = json.loads(
+                        str(base64.b64decode(j.split('://')[1]), 'utf-8'))
+                    item['name'] = item['ps']
+                    vmess = {
+                        "name": item['ps'],
+                        "server": i['value'].split(':')[0],
+                        "port": int(i['value'].split(':')[1]),
+                        "tls": True if item['tls'] == "tls" else False,
+                        "type": "vmess",
+                        "uuid": item['id'],
+                        "alterId": item['aid'],
+                        "cipher": "auto",
+                        "network": item['net'],
+                        "ws-path": item['path'],
+                        "ws-headers": {
+                            "Host": item['peer']
+                        }
+                    }
+                    yml['proxies'].append(vmess)
+                    yml['proxy-groups'][0]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][1]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][2]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][3]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][4]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][5]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][6]['proxies'].append(vmess['name'])
+                    yml['proxy-groups'][9]['proxies'].append(vmess['name'])
+        except Exception as e:
+            print(e.args)
+    return yaml.safe_dump(yml, allow_unicode=True)
+
+
 @app.post('/getSub')
 def sub():
     try:
@@ -89,6 +152,16 @@ def getSub(url):
         })
 
     return get_data(g.data.get(url))['res']
+
+
+@app.get('/clash/<string:url>')
+def getClash(url):
+    if g.data.get(url) is None:
+        return jsonify({
+            "code": -1,
+            "msg": "url not existed"
+        })
+    return get_yaml(g.data.get(url))
 
 
 @app.errorhandler(405)

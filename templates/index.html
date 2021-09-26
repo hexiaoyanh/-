@@ -92,7 +92,7 @@
                         message: "转换成功"
                     })
                     mdui.$('#copy').empty();
-                    mdui.$('#copy').append(`    <div class="mdui-chip" style="margin-bottom: 40px">\n        <span class="mdui-chip-title" >${window.location.href + 'sub/' + data.url}</span>\n        <span id="copy" data-clipboard-text='${window.location.href + 'sub/' + data.url}' class="mdui-chip-delete"><i class="mdui-icon material-icons">content_copy</i></span>\n    </div>`)
+                    mdui.$('#copy').append(`     <div class="mdui-chip" style="margin-bottom: 40px;padding-left: 15px;">V2Ray:\n        <span class="mdui-chip-title" >${window.location.href + 'sub/' + data.url}</span>\n        <span id="copy" data-clipboard-text='${window.location.href + 'sub/' + data.url}' class="mdui-chip-delete"><i class="mdui-icon material-icons">content_copy</i></span>\n    </div> <div class="mdui-chip" style="margin-bottom: 40px;padding-left: 15px;">Clash:\n        <span class="mdui-chip-title" >${window.location.href + 'clash/' + data.url}</span>\n        <span id="copy" data-clipboard-text='${window.location.href + 'clash/' + data.url}' class="mdui-chip-delete"><i class="mdui-icon material-icons">content_copy</i></span>\n    </div>\n    `)
                 } else {
                     mdui.snackbar({
                         message: "转换失败，请检查地址和转换地址是否有误。"
